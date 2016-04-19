@@ -9,7 +9,7 @@
 # Mongo Explorer plugin:
 .idea/
 
-*.iml/
+*.iml
 
 ## File-based project format:
 *.iws
