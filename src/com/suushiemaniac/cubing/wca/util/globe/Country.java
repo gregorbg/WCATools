@@ -12,7 +12,7 @@ public class Country {
         try {
             WcaDatabase db = WcaDatabase.inst();
             PreparedStatement stat = db.prepareStatement("SELECT * FROM Countries WHERE id = ?");
-            stat.setString(0, id);
+            stat.setString(1, id);
 
             ResultSet res = db.query(stat);
 

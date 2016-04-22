@@ -15,7 +15,7 @@ public class WcaDatabase {
     private WcaDatabase() {
         //TODO move to separate config
         try {
-            this.conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/wca-export?user=root&password=localsql");
+            this.conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/wca-export?useSSL=false&user=root&password=localsql");
         } catch (SQLException e) {
             e.printStackTrace();
         }
