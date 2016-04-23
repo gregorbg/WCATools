@@ -23,73 +23,77 @@ public class Competition {
 
             ResultSet res = db.query(stat);
 
-            String venueString = res.getString("venue");
-            JSONPair<String, String> venuePair =
-                    venueString.startsWith("[") && venueString.endsWith("]") && venueString.contains("{") && venueString.contains("}")
-                            ? JSONPair.fromString(venueString)
-                            : new JSONPair<>(venueString, "");
+            if (res.next()) {
+                String venueString = res.getString("venue");
+                JSONPair<String, String> venuePair =
+                        venueString.startsWith("[") && venueString.endsWith("]") && venueString.contains("{") && venueString.contains("}")
+                                ? JSONPair.fromString(venueString)
+                                : new JSONPair<>(venueString, "");
 
-            String delegString = res.getString("wcaDelegate");
-            String[] delegs = delegString.split("(?<=\\])\\s+?(?=\\[)");
-            List<Person> delegPersons = new ArrayList<>();
+                String delegString = res.getString("wcaDelegate");
+                String[] delegs = delegString.split("(?<=\\])\\s+?(?=\\[)");
+                List<Person> delegPersons = new ArrayList<>();
 
-            for (String delegJson : delegs) {
-                JSONPair<String, String> delegPair = JSONPair.fromString(delegJson);
-                Collections.addAll(delegPersons, Person.fromName(delegPair.getKey()));
-            }
-
-            String orgString = res.getString("organiser");
-            List<Person> orgPersons = new ArrayList<>();
-
-            if (orgString.length() > 0 && orgString.startsWith("[") && orgString.endsWith("]") && orgString.contains("{") && orgString.contains("}")) {
-                String[] orgs = orgString.split("(?<=\\])\\s+?(?=\\[)");
-
-                for (String orgJson : orgs) {
-                    JSONPair<String, String> orgPair = JSONPair.fromString(orgJson);
-                    Collections.addAll(orgPersons, Person.fromName(orgPair.getKey()));
+                for (String delegJson : delegs) {
+                    JSONPair<String, String> delegPair = JSONPair.fromString(delegJson);
+                    Collections.addAll(delegPersons, Person.fromName(delegPair.getKey()));
                 }
+
+                String orgString = res.getString("organiser");
+                List<Person> orgPersons = new ArrayList<>();
+
+                if (orgString.length() > 0 && orgString.startsWith("[") && orgString.endsWith("]") && orgString.contains("{") && orgString.contains("}")) {
+                    String[] orgs = orgString.split("(?<=\\])\\s+?(?=\\[)");
+
+                    for (String orgJson : orgs) {
+                        JSONPair<String, String> orgPair = JSONPair.fromString(orgJson);
+                        Collections.addAll(orgPersons, Person.fromName(orgPair.getKey()));
+                    }
+                } else {
+                    orgPersons = delegPersons;
+                }
+
+                String catString = res.getString("eventSpecs");
+                String[] cats = catString.contains("=///0/ ") ? catString.split("=///0/ ") : catString.split("\\s+?");
+                List<Event> catList = new ArrayList<>();
+
+                for (String catName : cats) {
+                    catList.add(Event.fromID(catName));
+                }
+
+                int startMonth = res.getInt("month");
+                int endMonth = res.getInt("endMonth");
+
+                return new Competition(
+                        res.getString("id"),
+                        res.getString("name"),
+                        res.getString("cityName"),
+                        res.getString("information"),
+                        venuePair.getKey(),
+                        venuePair.getValue(),
+                        res.getString("venueAddress"),
+                        res.getString("venueDetails"),
+                        res.getString("website"),
+                        res.getString("cellName"),
+                        Country.fromID(res.getString("countryId")),
+                        new SmallDate(
+                                res.getInt("day"),
+                                startMonth,
+                                res.getInt("year")
+                        ),
+                        new SmallDate(
+                                res.getInt("endDay"),
+                                endMonth,
+                                res.getInt("year") + (endMonth < startMonth ? 1 : 0)
+                        ),
+                        catList.toArray(new Event[catList.size()]),
+                        delegPersons.toArray(new Person[delegPersons.size()]),
+                        orgPersons.toArray(new Person[orgPersons.size()]),
+                        GeoCoord.fromSQLResult(res)
+                );
             } else {
-                orgPersons = delegPersons;
+                return null;
             }
-
-            String catString = res.getString("eventSpecs");
-            String[] cats = catString.contains("") ? catString.split("=///0/ ") : catString.split("\\s+?");
-            List<Event> catList = new ArrayList<>();
-
-            for (String catName : cats) {
-                catList.add(Event.fromID(catName));
-            }
-
-            int startMonth = res.getInt("month");
-            int endMonth = res.getInt("endMonth");
-
-            return res.next() ? new Competition(
-                    res.getString("id"),
-                    res.getString("name"),
-                    res.getString("cityName"),
-                    res.getString("information"),
-                    venuePair.getKey(),
-                    venuePair.getValue(),
-                    res.getString("venueAddress"),
-                    res.getString("venueDetails"),
-                    res.getString("website"),
-                    res.getString("cellName"),
-                    Country.fromID(res.getString("countryId")),
-                    new SmallDate(
-                            res.getInt("day"),
-                            startMonth,
-                            res.getInt("year")
-                    ),
-                    new SmallDate(
-                            res.getInt("endDay"),
-                            endMonth,
-                            res.getInt("year") + (endMonth < startMonth ? 1 : 0)
-                    ),
-                    catList.toArray(new Event[catList.size()]),
-                    delegPersons.toArray(new Person[delegPersons.size()]),
-                    orgPersons.toArray(new Person[orgPersons.size()]),
-                    GeoCoord.fromSQLResult(res)
-            ) : null;
         } catch (SQLException e) {
             e.printStackTrace();
             return null;

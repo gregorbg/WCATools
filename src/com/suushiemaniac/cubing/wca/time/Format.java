@@ -12,7 +12,7 @@ public class Format {
     private static Format[] finalFormats;
 
     public static Format[] listInst() {
-        if (finalFormats.length <= 0) {
+        if (finalFormats == null || finalFormats.length <= 0) {
             WcaDatabase db = WcaDatabase.inst();
             PreparedStatement stat = db.prepareStatement("SELECT * FROM Formats");
 

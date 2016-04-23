@@ -12,7 +12,7 @@ public class Event {
     private static Event[] finalEvents;
 
     public static Event[] listInst() {
-        if (finalEvents.length <= 0) {
+        if (finalEvents == null || finalEvents.length <= 0) {
             WcaDatabase db = WcaDatabase.inst();
             PreparedStatement stat = db.prepareStatement("SELECT * FROM Events");
 

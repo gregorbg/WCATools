@@ -12,7 +12,7 @@ public class Round {
     private static Round[] finalRounds;
 
     public static Round[] listInst() {
-        if (finalRounds.length <= 0) {
+        if (finalRounds == null || finalRounds.length <= 0) {
             WcaDatabase db = WcaDatabase.inst();
             PreparedStatement stat = db.prepareStatement("SELECT * FROM Rounds");
 
