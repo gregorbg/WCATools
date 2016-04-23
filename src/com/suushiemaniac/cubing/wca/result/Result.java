@@ -5,8 +5,156 @@ import com.suushiemaniac.cubing.wca.comp.Event;
 import com.suushiemaniac.cubing.wca.comp.Round;
 import com.suushiemaniac.cubing.wca.person.Person;
 import com.suushiemaniac.cubing.wca.time.Format;
+import com.suushiemaniac.cubing.wca.util.ArrayUtils;
+import com.suushiemaniac.cubing.wca.util.WcaDatabase;
+import com.suushiemaniac.cubing.wca.util.globe.Continent;
+import com.suushiemaniac.cubing.wca.util.globe.Country;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Result {
+    private static Result[] forQuery(PreparedStatement stat) {
+        try {
+            WcaDatabase db = WcaDatabase.inst();
+
+            ResultSet res = db.query(stat);
+            List<Result> resultList = new ArrayList<>();
+
+            while (res.next()) {
+                int[] values = new int[5];
+
+                for (int i = 0; i < 5; i++) {
+                    values[i] = res.getInt("value" + (i + 1));
+                }
+
+                resultList.add(new Result(
+                        res.getString("competitionId"),
+                        res.getString("eventId"),
+                        res.getString("roundId"),
+                        res.getString("personName"),
+                        res.getString("personId"),
+                        res.getString("personCountryId"),
+                        res.getString("formatId"),
+                        res.getString("regionalSingleRecord"),
+                        res.getString("regionalAverageRecord"),
+                        res.getInt("pos"),
+                        res.getInt("best"),
+                        res.getInt("average"),
+                        values
+                ));
+            }
+
+            return resultList.toArray(new Result[resultList.size()]);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Result[] forPerson(Person person) {
+        try {
+            WcaDatabase db = WcaDatabase.inst();
+            PreparedStatement stat = db.prepareStatement("SELECT * FROM Results WHERE personId = ?");
+            stat.setString(1, person.getId());
+
+            return forQuery(stat);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Result[] forCompetition(Competition competition) {
+        try {
+            WcaDatabase db = WcaDatabase.inst();
+            PreparedStatement stat = db.prepareStatement("SELECT * FROM Results WHERE competitionId = ?");
+            stat.setString(1, competition.getId());
+
+            return forQuery(stat);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Result[] wrForEvent(Event event) {
+        try {
+            WcaDatabase db = WcaDatabase.inst();
+            PreparedStatement stat = db.prepareStatement("SELECT * FROM Results WHERE eventId = ? AND (regionalSingleRecord = ? OR regionalAverageRecord = ?)");
+            stat.setString(1, event.getId());
+            stat.setString(2, "WR");
+            stat.setString(3, "WR");
+
+            return forQuery(stat);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Result[] crForEvent(Event event, Continent continent) {
+        try {
+            WcaDatabase db = WcaDatabase.inst();
+            PreparedStatement stat = db.prepareStatement("SELECT * FROM Results WHERE eventId = ? AND (regionalSingleRecord = ? OR regionalAverageRecord = ?)");
+            stat.setString(1, event.getId());
+            stat.setString(2, continent.getRecordName());
+            stat.setString(3, continent.getRecordName());
+
+            return forQuery(stat);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Result[] nrForEvent(Event event, Country country) {
+        try {
+            WcaDatabase db = WcaDatabase.inst();
+            PreparedStatement stat = db.prepareStatement("SELECT * FROM Results WHERE eventId = ? AND personCountryId = ? AND (regionalSingleRecord = ? OR regionalAverageRecord = ?)");
+            stat.setString(1, event.getId());
+            stat.setString(2, country.getId());
+            stat.setString(3, "NR");
+            stat.setString(4, "NR");
+
+            return forQuery(stat);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Result[] pbsForPersonForEvent(Person person, Event event) {
+        try {
+            WcaDatabase db = WcaDatabase.inst();
+            PreparedStatement stat = db.prepareStatement("SELECT * FROM Results WHERE personId = ? AND eventId = ? AND (best = (SELECT min(best) FROM Results WHERE personId = ? AND eventId = ? AND best > 0) OR average = (SELECT min(average) FROM Results WHERE personId = ? AND eventId = ? AND average > 0))");
+            stat.setString(1, person.getId());
+            stat.setString(2, event.getId());
+            stat.setString(3, person.getId());
+            stat.setString(4, event.getId());
+            stat.setString(5, person.getId());
+            stat.setString(6, event.getId());
+
+            return forQuery(stat);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Result[] pbsForPerson(Person person) {
+        Result[] allPbs = new Result[0];
+
+        for (Event event : Event.listInst()) {
+            allPbs = ArrayUtils.merge(allPbs, pbsForPersonForEvent(person, event));
+        }
+
+        return allPbs;
+    }
+
     //Database values
     private String competitionId;
     private String eventId;
