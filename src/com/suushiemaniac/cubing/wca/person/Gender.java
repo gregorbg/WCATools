@@ -1,4 +1,4 @@
-package com.suushiemaniac.cubing.wca.util;
+package com.suushiemaniac.cubing.wca.person;
 
 public enum Gender {
     MALE, FEMALE, UNKNOWN;

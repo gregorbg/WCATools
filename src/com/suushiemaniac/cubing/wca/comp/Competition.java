@@ -1,7 +1,7 @@
 package com.suushiemaniac.cubing.wca.comp;
 
 import com.suushiemaniac.cubing.wca.person.Person;
-import com.suushiemaniac.cubing.wca.util.GeoCoord;
+import com.suushiemaniac.cubing.wca.util.globe.GeoCoord;
 import com.suushiemaniac.cubing.wca.util.JSONPair;
 import com.suushiemaniac.cubing.wca.util.SmallDate;
 import com.suushiemaniac.cubing.wca.util.WcaDatabase;
@@ -10,6 +10,9 @@ import com.suushiemaniac.cubing.wca.util.globe.Country;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Competition {
     public static Competition fromId(String id) {
@@ -26,11 +29,39 @@ public class Competition {
                             ? JSONPair.fromString(venueString)
                             : new JSONPair<>(venueString, "");
 
-            // TODO convert to list
-            JSONPair<String, String> delegPair = JSONPair.fromString(res.getString("wcaDelegate"));
+            String delegString = res.getString("wcaDelegate");
+            String[] delegs = delegString.split("(?<=\\])\\s+?(?=\\[)");
+            List<Person> delegPersons = new ArrayList<>();
+
+            for (String delegJson : delegs) {
+                JSONPair<String, String> delegPair = JSONPair.fromString(delegJson);
+                Collections.addAll(delegPersons, Person.fromName(delegPair.getKey()));
+            }
 
             String orgString = res.getString("organiser");
-            JSONPair<String, String> orgPair = orgString.length() > 0 ? JSONPair.fromString(orgString) : delegPair;
+            List<Person> orgPersons = new ArrayList<>();
+
+            if (orgString.length() > 0 && orgString.startsWith("[") && orgString.endsWith("]") && orgString.contains("{") && orgString.contains("}")) {
+                String[] orgs = orgString.split("(?<=\\])\\s+?(?=\\[)");
+
+                for (String orgJson : orgs) {
+                    JSONPair<String, String> orgPair = JSONPair.fromString(orgJson);
+                    Collections.addAll(orgPersons, Person.fromName(orgPair.getKey()));
+                }
+            } else {
+                orgPersons = delegPersons;
+            }
+
+            String catString = res.getString("eventSpecs");
+            String[] cats = catString.contains("") ? catString.split("=///0/ ") : catString.split("\\s+?");
+            List<Event> catList = new ArrayList<>();
+
+            for (String catName : cats) {
+                catList.add(Event.fromID(catName));
+            }
+
+            int startMonth = res.getInt("month");
+            int endMonth = res.getInt("endMonth");
 
             return res.next() ? new Competition(
                     res.getString("id"),
@@ -46,17 +77,17 @@ public class Competition {
                     Country.fromID(res.getString("countryId")),
                     new SmallDate(
                             res.getInt("day"),
-                            res.getInt("month"),
+                            startMonth,
                             res.getInt("year")
                     ),
                     new SmallDate(
                             res.getInt("endDay"),
-                            res.getInt("endMonth"),
-                            res.getInt("year") // Attention, may differ!!
+                            endMonth,
+                            res.getInt("year") + (endMonth < startMonth ? 1 : 0)
                     ),
-                    null, // TODO parse: split at either " " or "=///0/ "
-                    null, // TODO parse from JSON-ish key-value pair
-                    null, // TODO parse from JSON-ish key-value pair
+                    catList.toArray(new Event[catList.size()]),
+                    delegPersons.toArray(new Person[delegPersons.size()]),
+                    orgPersons.toArray(new Person[orgPersons.size()]),
                     GeoCoord.fromSQLResult(res)
             ) : null;
         } catch (SQLException e) {
@@ -65,15 +96,20 @@ public class Competition {
         }
     }
 
-    public static Competition fromName(String name) {
+    public static Competition[] fromName(String name) {
         try {
             WcaDatabase db = WcaDatabase.inst();
-            PreparedStatement stat = db.prepareStatement("SELECT id FROM Competitions WHERE name = ?");
-            stat.setString(1, name);
+            PreparedStatement stat = db.prepareStatement("SELECT id FROM Competitions WHERE name LIKE ?");
+            stat.setString(1, "%" + name + "%");
 
             ResultSet res = db.query(stat);
+            List<Competition> competitionList = new ArrayList<>();
 
-            return res.next() ? Competition.fromId(res.getString("id")) : null;
+            while (res.next()) {
+                competitionList.add(Competition.fromId(res.getString("id")));
+            }
+
+            return competitionList.toArray(new Competition[competitionList.size()]);
         } catch (SQLException e) {
             e.printStackTrace();
             return null;

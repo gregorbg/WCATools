@@ -1,11 +1,12 @@
 package com.suushiemaniac.cubing.wca.util.globe;
 
-import com.suushiemaniac.cubing.wca.util.GeoCoord;
 import com.suushiemaniac.cubing.wca.util.WcaDatabase;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Continent {
     public static Continent fromID(String id) {
@@ -29,8 +30,24 @@ public class Continent {
         }
     }
 
-    public static Continent fromName(String name) {
-        return Continent.fromID("_" + name);
+    public static Continent[] fromName(String name) {
+        try {
+            WcaDatabase db = WcaDatabase.inst();
+            PreparedStatement stat = db.prepareStatement("SELECT id FROM Continents WHERE name LIKE ?");
+            stat.setString(1, "%" + name + "%");
+
+            ResultSet res = db.query(stat);
+            List<Continent> continentList = new ArrayList<>();
+
+            while (res.next()) {
+                continentList.add(Continent.fromID(res.getString("id")));
+            }
+
+            return continentList.toArray(new Continent[continentList.size()]);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private String id;

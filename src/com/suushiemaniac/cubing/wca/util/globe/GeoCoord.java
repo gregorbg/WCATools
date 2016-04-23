@@ -1,4 +1,4 @@
-package com.suushiemaniac.cubing.wca.util;
+package com.suushiemaniac.cubing.wca.util.globe;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

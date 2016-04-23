@@ -1,4 +1,6 @@
-package com.suushiemaniac.cubing.wca.util;
+package com.suushiemaniac.cubing.wca.person;
+
+import com.suushiemaniac.cubing.wca.util.StringUtils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
