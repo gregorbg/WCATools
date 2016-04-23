@@ -20,9 +20,10 @@ public class Country {
             return res.next() ? new Country(
                     res.getString("id"),
                     res.getString("name"),
+                    res.getString("continentId"),
                     res.getString("iso2"),
-                    Continent.fromID(res.getString("continentId")),
-                    GeoCoord.fromSQLResult(res),
+                    res.getInt("latitude"),
+                    res.getInt("longitude"),
                     res.getInt("zoom")
             ) : null;
         } catch (SQLException e) {
@@ -51,22 +52,28 @@ public class Country {
         }
     }
 
+    //Database values
     private String id;
     private String name;
+    private String continentId;
     private String iso2;
 
-    private Continent continent;
-
-    private GeoCoord coords;
-
+    private int latitude;
+    private int longitude;
     private int zoom;
 
-    public Country(String id, String name, String iso2, Continent continent, GeoCoord coords, int zoom) {
+    //Derived properties
+    private Continent continent;
+
+    private GeoCoord coordinates;
+
+    public Country(String id, String name, String continentId, String iso2, int latitude, int longitude, int zoom) {
         this.id = id;
         this.name = name;
+        this.continentId = continentId;
         this.iso2 = iso2;
-        this.continent = continent;
-        this.coords = coords;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.zoom = zoom;
     }
 
@@ -78,16 +85,36 @@ public class Country {
         return name;
     }
 
+    public String getContinentId() {
+        return continentId;
+    }
+
+    public Continent getContinent() {
+        if (continent == null || !continent.getId().equals(continentId)) {
+            continent = Continent.fromID(continentId);
+        }
+
+        return continent;
+    }
+
     public String getIso2() {
         return iso2;
     }
 
-    public Continent getContinent() {
-        return continent;
+    public int getLatitude() {
+        return latitude;
     }
 
-    public GeoCoord getCoords() {
-        return coords;
+    public int getLongitude() {
+        return longitude;
+    }
+
+    public GeoCoord getCoordinates() {
+        if (coordinates == null || coordinates.getLatitude() != latitude || coordinates.getLongitude() != longitude) {
+            coordinates = new GeoCoord(latitude, longitude);
+        }
+
+        return coordinates;
     }
 
     public int getZoom() {
@@ -98,16 +125,20 @@ public class Country {
         this.name = name;
     }
 
+    public void setContinentId(String continentId) {
+        this.continentId = continentId;
+    }
+
     public void setIso2(String iso2) {
         this.iso2 = iso2;
     }
 
-    public void setContinent(Continent continent) {
-        this.continent = continent;
+    public void setLatitude(int latitude) {
+        this.latitude = latitude;
     }
 
-    public void setCoords(GeoCoord coords) {
-        this.coords = coords;
+    public void setLongitude(int longitude) {
+        this.longitude = longitude;
     }
 
     public void setZoom(int zoom) {

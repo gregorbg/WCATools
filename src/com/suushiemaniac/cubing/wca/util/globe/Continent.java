@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static javafx.scene.input.KeyCode.M;
+
 public class Continent {
     public static Continent fromID(String id) {
         try {
@@ -21,7 +23,8 @@ public class Continent {
                     res.getString("id"),
                     res.getString("name"),
                     res.getString("recordName"),
-                    GeoCoord.fromSQLResult(res),
+                    res.getInt("latitude"),
+                    res.getInt("longitude"),
                     res.getInt("zoom")
             ) : null;
         } catch (SQLException e) {
@@ -50,20 +53,24 @@ public class Continent {
         }
     }
 
+    //Database values
     private String id;
     private String name;
     private String recordName;
 
-    private GeoCoord coords;
-
+    private int latitude;
+    private int longitude;
     private int zoom;
 
-    public Continent(String id, String name, String recordName, GeoCoord coords, int zoom) {
-        this.id = id;
+    //Derived properties
+    private GeoCoord coordinates;
 
+    public Continent(String id, String name, String recordName, int latitude, int longitude, int zoom) {
+        this.id = id;
         this.name = name;
         this.recordName = recordName;
-        this.coords = coords;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.zoom = zoom;
     }
 
@@ -79,8 +86,20 @@ public class Continent {
         return recordName;
     }
 
-    public GeoCoord getCoords() {
-        return coords;
+    public int getLatitude() {
+        return latitude;
+    }
+
+    public int getLongitude() {
+        return longitude;
+    }
+
+    public GeoCoord getCoordinates() {
+        if (coordinates == null || coordinates.getLatitude() != latitude || coordinates.getLongitude() != longitude) {
+            coordinates = new GeoCoord(latitude, longitude);
+        }
+
+        return coordinates;
     }
 
     public int getZoom() {
@@ -95,8 +114,12 @@ public class Continent {
         this.recordName = recordName;
     }
 
-    public void setCoords(GeoCoord coords) {
-        this.coords = coords;
+    public void setLatitude(int latitude) {
+        this.latitude = latitude;
+    }
+
+    public void setLongitude(int longitude) {
+        this.longitude = longitude;
     }
 
     public void setZoom(int zoom) {

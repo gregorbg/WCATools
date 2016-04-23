@@ -23,77 +23,28 @@ public class Competition {
 
             ResultSet res = db.query(stat);
 
-            if (res.next()) {
-                String venueString = res.getString("venue");
-                JSONPair<String, String> venuePair =
-                        venueString.startsWith("[") && venueString.endsWith("]") && venueString.contains("{") && venueString.contains("}")
-                                ? JSONPair.fromString(venueString)
-                                : new JSONPair<>(venueString, "");
-
-                String delegString = res.getString("wcaDelegate");
-                String[] delegs = delegString.split("(?<=\\])\\s+?(?=\\[)");
-                List<Person> delegPersons = new ArrayList<>();
-
-                for (String delegJson : delegs) {
-                    JSONPair<String, String> delegPair = JSONPair.fromString(delegJson);
-                    Collections.addAll(delegPersons, Person.fromName(delegPair.getKey()));
-                }
-
-                String orgString = res.getString("organiser");
-                List<Person> orgPersons = new ArrayList<>();
-
-                if (orgString.length() > 0 && orgString.startsWith("[") && orgString.endsWith("]") && orgString.contains("{") && orgString.contains("}")) {
-                    String[] orgs = orgString.split("(?<=\\])\\s+?(?=\\[)");
-
-                    for (String orgJson : orgs) {
-                        JSONPair<String, String> orgPair = JSONPair.fromString(orgJson);
-                        Collections.addAll(orgPersons, Person.fromName(orgPair.getKey()));
-                    }
-                } else {
-                    orgPersons = delegPersons;
-                }
-
-                String catString = res.getString("eventSpecs");
-                String[] cats = catString.contains("=///0/ ") ? catString.split("=///0/ ") : catString.split("\\s+?");
-                List<Event> catList = new ArrayList<>();
-
-                for (String catName : cats) {
-                    catList.add(Event.fromID(catName));
-                }
-
-                int startMonth = res.getInt("month");
-                int endMonth = res.getInt("endMonth");
-
-                return new Competition(
-                        res.getString("id"),
-                        res.getString("name"),
-                        res.getString("cityName"),
-                        res.getString("information"),
-                        venuePair.getKey(),
-                        venuePair.getValue(),
-                        res.getString("venueAddress"),
-                        res.getString("venueDetails"),
-                        res.getString("website"),
-                        res.getString("cellName"),
-                        Country.fromID(res.getString("countryId")),
-                        new SmallDate(
-                                res.getInt("day"),
-                                startMonth,
-                                res.getInt("year")
-                        ),
-                        new SmallDate(
-                                res.getInt("endDay"),
-                                endMonth,
-                                res.getInt("year") + (endMonth < startMonth ? 1 : 0)
-                        ),
-                        catList.toArray(new Event[catList.size()]),
-                        delegPersons.toArray(new Person[delegPersons.size()]),
-                        orgPersons.toArray(new Person[orgPersons.size()]),
-                        GeoCoord.fromSQLResult(res)
-                );
-            } else {
-                return null;
-            }
+            return res.next() ? new Competition(
+                    res.getString("id"),
+                    res.getString("name"),
+                    res.getString("cityName"),
+                    res.getString("countryId"),
+                    res.getString("information"),
+                    res.getString("eventSpecs"),
+                    res.getString("wcaDelegate"),
+                    res.getString("organiser"),
+                    res.getString("venue"),
+                    res.getString("venueAddress"),
+                    res.getString("venueDetails"),
+                    res.getString("website"),
+                    res.getString("cellName"),
+                    res.getInt("year"),
+                    res.getInt("month"),
+                    res.getInt("day"),
+                    res.getInt("endMonth"),
+                    res.getInt("endDay"),
+                    res.getInt("latitude"),
+                    res.getInt("longitude")
+            ) : null;
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
@@ -120,47 +71,63 @@ public class Competition {
         }
     }
 
+    //Database values
     private String id;
     private String name;
     private String cityName;
+    private String countryId;
     private String information;
+    private String eventSpecs;
+    private String wcaDelegate;
+    private String organiser;
     private String venue;
-    private String venueWebsite;
     private String venueAddress;
     private String venueDetails;
-    private String compWebsite;
+    private String website;
     private String cellName;
 
+    private int year;
+    private int month;
+    private int day;
+    private int endMonth;
+    private int endDay;
+    private int latitude;
+    private int longitude;
+
+    //Derived properties
     private Country country;
+
+    private Event[] events;
+
+    private Person[] wcaDelegates;
+    private Person[] organisers;
 
     private SmallDate startDate;
     private SmallDate endDate;
 
-    private Event[] events;
+    private GeoCoord coordinates;
 
-    private Person[] delegates;
-    private Person[] organisers;
-
-    private GeoCoord coords;
-
-    public Competition(String id, String name, String cityName, String information, String venue, String venueWebsite, String venueAddress, String venueDetails, String compWebsite, String cellName, Country country, SmallDate startDate, SmallDate endDate, Event[] events, Person[] delegates, Person[] organisers, GeoCoord coords) {
+    public Competition(String id, String name, String cityName, String countryId, String information, String eventSpecs, String wcaDelegate, String organiser, String venue, String venueAddress, String venueDetails, String website, String cellName, int year, int month, int day, int endMonth, int endDay, int latitude, int longitude) {
         this.id = id;
         this.name = name;
         this.cityName = cityName;
+        this.countryId = countryId;
         this.information = information;
+        this.eventSpecs = eventSpecs;
+        this.wcaDelegate = wcaDelegate;
+        this.organiser = organiser;
         this.venue = venue;
-        this.venueWebsite = venueWebsite;
         this.venueAddress = venueAddress;
         this.venueDetails = venueDetails;
-        this.compWebsite = compWebsite;
+        this.website = website;
         this.cellName = cellName;
-        this.country = country;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.events = events;
-        this.delegates = delegates;
-        this.organisers = organisers;
-        this.coords = coords;
+        this.year = year;
+        this.month = month;
+        this.day = day;
+        this.endMonth = endMonth;
+        this.endDay = endDay;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public String getId() {
@@ -175,16 +142,87 @@ public class Competition {
         return cityName;
     }
 
+    public String getCountryId() {
+        return countryId;
+    }
+
+    public Country getCountry() {
+        if (country == null || !country.getId().equals(countryId)) {
+            country = Country.fromID(countryId);
+        }
+
+        return country;
+    }
+
     public String getInformation() {
         return information;
     }
 
-    public String getVenue() {
-        return venue;
+    public String getEventSpecs() {
+        return eventSpecs;
     }
 
-    public String getVenueWebsite() {
-        return venueWebsite;
+    public Event[] getEvents() {
+        if (events == null || events.length <= 0) {
+            String[] eventIds = eventSpecs.contains("=///0/ ") ? eventSpecs.split("=///0/ ") : eventSpecs.split("\\s+?");
+            List<Event> eventList = new ArrayList<>();
+
+            for (String eventId : eventIds) {
+                eventList.add(Event.fromID(eventId));
+            }
+
+            events = eventList.toArray(new Event[eventList.size()]);
+        }
+
+        return events;
+    }
+
+    public String getWcaDelegate() {
+        return wcaDelegate;
+    }
+
+    public Person[] getWcaDelegates() {
+        if (wcaDelegates == null || wcaDelegates.length <= 0) {
+            String[] delegPairs = wcaDelegate.split("(?<=\\])\\s+?(?=\\[)");
+            List<Person> delegPersons = new ArrayList<>();
+
+            for (String delegJson : delegPairs) {
+                JSONPair<String, String> delegPair = JSONPair.fromString(delegJson);
+                Collections.addAll(delegPersons, Person.fromName(delegPair.getKey()));
+            }
+
+            wcaDelegates = delegPersons.toArray(new Person[delegPersons.size()]);
+        }
+
+        return wcaDelegates;
+    }
+
+    public String getOrganiser() {
+        return organiser;
+    }
+
+    public Person[] getOrganisers() {
+        if (organisers == null || organisers.length <= 0) {
+            if (organiser.length() > 0 && organiser.startsWith("[") && organiser.endsWith("]") && organiser.contains("{") && organiser.contains("}")) {
+                organisers = wcaDelegates;
+            } else {
+                String[] orgPairs = organiser.split("(?<=\\])\\s+?(?=\\[)");
+                List<Person> orgPersons = new ArrayList<>();
+
+                for (String orgJson : orgPairs) {
+                    JSONPair<String, String> orgPair = JSONPair.fromString(orgJson);
+                    Collections.addAll(orgPersons, Person.fromName(orgPair.getKey()));
+                }
+
+                organisers = orgPersons.toArray(new Person[orgPersons.size()]);
+            }
+        }
+
+        return organisers;
+    }
+
+    public String getVenue() {
+        return venue;
     }
 
     public String getVenueAddress() {
@@ -195,40 +233,64 @@ public class Competition {
         return venueDetails;
     }
 
-    public String getCompWebsite() {
-        return compWebsite;
+    public String getWebsite() {
+        return website;
     }
 
     public String getCellName() {
         return cellName;
     }
 
-    public Country getCountry() {
-        return country;
+    public int getYear() {
+        return year;
+    }
+
+    public int getMonth() {
+        return month;
+    }
+
+    public int getDay() {
+        return day;
     }
 
     public SmallDate getStartDate() {
+        if (startDate == null || startDate.getDay() != day || startDate.getMonth() != month || startDate.getYear() != year) {
+            startDate = new SmallDate(day, month, year);
+        }
+
         return startDate;
     }
 
+    public int getEndMonth() {
+        return endMonth;
+    }
+
+    public int getEndDay() {
+        return endDay;
+    }
+
     public SmallDate getEndDate() {
+        if (endDate == null || endDate.getDay() != endDay || endDate.getMonth() != endMonth || endDate.getYear() != (year + (endMonth < month ? 1 : 0))) {
+            endDate = new SmallDate(endDay, endMonth, year + (endMonth < month ? 1 : 0));
+        }
+
         return endDate;
     }
 
-    public Event[] getEvents() {
-        return events;
+    public int getLatitude() {
+        return latitude;
     }
 
-    public Person[] getDelegates() {
-        return delegates;
+    public int getLongitude() {
+        return longitude;
     }
 
-    public Person[] getOrganisers() {
-        return organisers;
-    }
+    public GeoCoord getCoordinates() {
+        if (coordinates == null || coordinates.getLatitude() != latitude || coordinates.getLongitude() != longitude) {
+            coordinates = new GeoCoord(latitude, longitude);
+        }
 
-    public GeoCoord getCoords() {
-        return coords;
+        return coordinates;
     }
 
     public void setName(String name) {
@@ -239,16 +301,28 @@ public class Competition {
         this.cityName = cityName;
     }
 
+    public void setCountryId(String countryId) {
+        this.countryId = countryId;
+    }
+
     public void setInformation(String information) {
         this.information = information;
     }
 
-    public void setVenue(String venue) {
-        this.venue = venue;
+    public void setEventSpecs(String eventSpecs) {
+        this.eventSpecs = eventSpecs;
     }
 
-    public void setVenueWebsite(String venueWebsite) {
-        this.venueWebsite = venueWebsite;
+    public void setWcaDelegate(String wcaDelegate) {
+        this.wcaDelegate = wcaDelegate;
+    }
+
+    public void setOrganiser(String organiser) {
+        this.organiser = organiser;
+    }
+
+    public void setVenue(String venue) {
+        this.venue = venue;
     }
 
     public void setVenueAddress(String venueAddress) {
@@ -259,39 +333,39 @@ public class Competition {
         this.venueDetails = venueDetails;
     }
 
-    public void setCompWebsite(String compWebsite) {
-        this.compWebsite = compWebsite;
+    public void setWebsite(String website) {
+        this.website = website;
     }
 
     public void setCellName(String cellName) {
         this.cellName = cellName;
     }
 
-    public void setCountry(Country country) {
-        this.country = country;
+    public void setYear(int year) {
+        this.year = year;
     }
 
-    public void setStartDate(SmallDate startDate) {
-        this.startDate = startDate;
+    public void setMonth(int month) {
+        this.month = month;
     }
 
-    public void setEndDate(SmallDate endDate) {
-        this.endDate = endDate;
+    public void setDay(int day) {
+        this.day = day;
     }
 
-    public void setEvents(Event[] events) {
-        this.events = events;
+    public void setEndMonth(int endMonth) {
+        this.endMonth = endMonth;
     }
 
-    public void setDelegates(Person[] delegates) {
-        this.delegates = delegates;
+    public void setEndDay(int endDay) {
+        this.endDay = endDay;
     }
 
-    public void setOrganisers(Person[] organisers) {
-        this.organisers = organisers;
+    public void setLatitude(int latitude) {
+        this.latitude = latitude;
     }
 
-    public void setCoords(GeoCoord coords) {
-        this.coords = coords;
+    public void setLongitude(int longitude) {
+        this.longitude = longitude;
     }
 }

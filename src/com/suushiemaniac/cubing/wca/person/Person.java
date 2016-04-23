@@ -19,11 +19,12 @@ public class Person {
             ResultSet res = db.query(stat);
 
             return res.next() ? new Person(
-                    WcaId.fromString(res.getString("id")),
-                    res.getInt("subid"),
+                    res.getString("id"),
                     res.getString("name"),
-                    Country.fromID(res.getString("countryId")),
-                    Gender.fromIdentifier(res.getString("gender"))
+                    res.getString("countryId"),
+                    res.getString("gender"),
+                    res.getInt("subid")
+
             ) : null;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -51,61 +52,86 @@ public class Person {
         }
     }
 
-    private WcaId wcaId;
+    //Database values
+    private String id;
+    private String name;
+    private String countryId;
+    private String genderId;
 
     private int subId;
 
-    private String name;
+    //Derived properties;
+    private WcaId wcaId;
 
     private Country country;
 
     private Gender gender;
 
-    public Person(WcaId wcaId, int subId, String name, Country country, Gender gender) {
-        this.wcaId = wcaId;
-        this.subId = subId;
+    public Person(String id, String name, String countryId, String genderId, int subId) {
+        this.id = id;
         this.name = name;
-        this.country = country;
-        this.gender = gender;
+        this.countryId = countryId;
+        this.genderId = genderId;
+        this.subId = subId;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public WcaId getWcaId() {
-        return wcaId;
-    }
+        if (wcaId == null || !wcaId.toFormatString().equals(id)) {
+            wcaId = WcaId.fromString(id);
+        }
 
-    public int getSubId() {
-        return subId;
+        return wcaId;
     }
 
     public String getName() {
         return name;
     }
 
+    public String getCountryId() {
+        return countryId;
+    }
+
     public Country getCountry() {
+        if (country == null || !country.getId().equals(countryId)) {
+            country = Country.fromID(countryId);
+        }
+
         return country;
     }
 
+    public String getGenderId() {
+        return genderId;
+    }
+
     public Gender getGender() {
+        if (gender == null || !gender.getId().equals(genderId)) {
+            gender = Gender.fromId(genderId);
+        }
+
         return gender;
     }
 
-    public void setWcaId(WcaId wcaId) {
-        this.wcaId = wcaId;
-    }
-
-    public void setSubId(int subId) {
-        this.subId = subId;
+    public int getSubId() {
+        return subId;
     }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public void setCountry(Country country) {
-        this.country = country;
+    public void setCountryId(String countryId) {
+        this.countryId = countryId;
     }
 
-    public void setGender(Gender gender) {
-        this.gender = gender;
+    public void setGenderId(String genderId) {
+        this.genderId = genderId;
+    }
+
+    public void setSubId(int subId) {
+        this.subId = subId;
     }
 }

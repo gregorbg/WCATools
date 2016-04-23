@@ -1,18 +1,25 @@
 package com.suushiemaniac.cubing.wca.person;
 
 public enum Gender {
-    MALE, FEMALE, UNKNOWN;
+    MALE("m"), FEMALE("f"), UNKNOWN("?");
 
-    public static Gender fromIdentifier(String identifier) {
-        identifier = identifier.toLowerCase();
+    private String id;
 
-        switch (identifier) {
-            case "m":
-                return MALE;
-            case "f":
-                return FEMALE;
-            default:
-                return UNKNOWN;
+    Gender(String id) {
+        this.id = id;
+    }
+
+    public String getId() {
+        return this.id;
+    }
+
+    public static Gender fromId(String identifier) {
+        for (Gender g : values()) {
+            if (g.getId().equals(identifier.toLowerCase())) {
+                return g;
+            }
         }
+
+        return UNKNOWN;
     }
 }

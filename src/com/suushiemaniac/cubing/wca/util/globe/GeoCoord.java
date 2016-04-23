@@ -4,15 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class GeoCoord {
-    public static GeoCoord fromSQLResult(ResultSet res) {
-        try {
-            return new GeoCoord(res.getInt("latitude"), res.getInt("longitude"));
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     private int latitude;
     private int longitude;
 
