@@ -3,11 +3,14 @@ package com.suushiemaniac.cubing.wca.result;
 import com.suushiemaniac.cubing.wca.comp.Competition;
 import com.suushiemaniac.cubing.wca.comp.Event;
 import com.suushiemaniac.cubing.wca.comp.Round;
+import com.suushiemaniac.cubing.wca.util.ArrayUtils;
 import com.suushiemaniac.cubing.wca.util.WcaDatabase;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Scramble {
     public static Scramble fromID(int id) {
@@ -28,6 +31,55 @@ public class Scramble {
                     res.getString("scramble"),
                     res.getBoolean("isExtra")
             ) : null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Scramble[] forResult(Result result) {
+        try {
+            WcaDatabase db = WcaDatabase.inst();
+            PreparedStatement stat;
+            ResultSet res;
+            //Guess group
+            stat = db.prepareStatement("SELECT DISTINCT personName FROM Results WHERE competitionId = ? AND eventId = ? AND roundId = ? ORDER BY personName DESC");
+            stat.setString(1, result.getCompetitionId());
+            stat.setString(2, result.getEventId());
+            stat.setString(3, result.getRoundId());
+
+            res = db.query(stat);
+            List<String> nameList = new ArrayList<>();
+
+            while (res.next()) {
+                nameList.add(res.getString("personName"));
+            }
+
+            stat = db.prepareStatement("SELECT count(DISTINCT groupId) AS count FROM Scrambles WHERE competitionId = ? AND eventId = ? AND roundId = ?");
+            stat.setString(1, result.getCompetitionId());
+            stat.setString(2, result.getEventId());
+            stat.setString(3, result.getRoundId());
+
+            res = db.query(stat);
+
+            int groupCount = res.next() ? res.getInt("count") : 1;
+
+            int guessedGroup = 0;
+
+            stat = db.prepareStatement("SELECT * FROM Scrambles WHERE competitionId = ? AND eventId = ? AND roundId = ? AND groupId = ?");
+            stat.setString(1, result.getCompetitionId());
+            stat.setString(2, result.getEventId());
+            stat.setString(3, result.getRoundId());
+            stat.setString(4, ArrayUtils.APLHABET[guessedGroup]);
+
+            res = db.query(stat);
+            List<Scramble> scrambleList = new ArrayList<>();
+
+            while (res.next()) {
+                scrambleList.add(Scramble.fromID(res.getInt("scrambleId")));
+            }
+
+            return scrambleList.toArray(new Scramble[scrambleList.size()]);
         } catch (SQLException e) {
             e.printStackTrace();
             return null;

@@ -127,16 +127,14 @@ public class Result {
         }
     }
 
-    public static Result[] pbsForPersonForEvent(Person person, Event event) {
+    public static Result[] singlePbsForPersonForEvent(Person person, Event event) {
         try {
             WcaDatabase db = WcaDatabase.inst();
-            PreparedStatement stat = db.prepareStatement("SELECT * FROM Results WHERE personId = ? AND eventId = ? AND (best = (SELECT min(best) FROM Results WHERE personId = ? AND eventId = ? AND best > 0) OR average = (SELECT min(average) FROM Results WHERE personId = ? AND eventId = ? AND average > 0))");
+            PreparedStatement stat = db.prepareStatement("SELECT * FROM Results WHERE personId = ? AND eventId = ? AND best = (SELECT min(best) FROM Results WHERE personId = ? AND eventId = ? AND best > 0)");
             stat.setString(1, person.getId());
             stat.setString(2, event.getId());
             stat.setString(3, person.getId());
             stat.setString(4, event.getId());
-            stat.setString(5, person.getId());
-            stat.setString(6, event.getId());
 
             return forQuery(stat);
         } catch (SQLException e) {
@@ -145,11 +143,37 @@ public class Result {
         }
     }
 
-    public static Result[] pbsForPerson(Person person) {
+    public static Result[] singlePbsForPerson(Person person) {
         Result[] allPbs = new Result[0];
 
         for (Event event : Event.listInst()) {
-            allPbs = ArrayUtils.merge(allPbs, pbsForPersonForEvent(person, event));
+            allPbs = ArrayUtils.merge(allPbs, singlePbsForPersonForEvent(person, event));
+        }
+
+        return allPbs;
+    }
+
+    public static Result[] averagePbsForPersonForEvent(Person person, Event event) {
+        try {
+            WcaDatabase db = WcaDatabase.inst();
+            PreparedStatement stat = db.prepareStatement("SELECT * FROM Results WHERE personId = ? AND eventId = ? AND average = (SELECT min(average) FROM Results WHERE personId = ? AND eventId = ? AND average > 0)");
+            stat.setString(1, person.getId());
+            stat.setString(2, event.getId());
+            stat.setString(3, person.getId());
+            stat.setString(4, event.getId());
+
+            return forQuery(stat);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Result[] averagePbsForPerson(Person person) {
+        Result[] allPbs = new Result[0];
+
+        for (Event event : Event.listInst()) {
+            allPbs = ArrayUtils.merge(allPbs, averagePbsForPersonForEvent(person, event));
         }
 
         return allPbs;
