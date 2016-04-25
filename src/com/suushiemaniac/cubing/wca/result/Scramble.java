@@ -43,7 +43,7 @@ public class Scramble {
             PreparedStatement stat;
             ResultSet res;
             //Guess group
-            stat = db.prepareStatement("SELECT DISTINCT personName FROM Results WHERE competitionId = ? AND eventId = ? AND roundId = ? ORDER BY personName DESC");
+            stat = db.prepareStatement("SELECT DISTINCT personName FROM Results WHERE competitionId = ? AND eventId = ? AND roundId = ? ORDER BY personName ASC");
             stat.setString(1, result.getCompetitionId());
             stat.setString(2, result.getEventId());
             stat.setString(3, result.getRoundId());
@@ -63,8 +63,12 @@ public class Scramble {
             res = db.query(stat);
 
             int groupCount = res.next() ? res.getInt("count") : 1;
+            int groupPos = nameList.indexOf(result.getPersonName());
 
-            int guessedGroup = 0;
+            int perGroup = nameList.size() / groupCount;
+
+            int guessedGroup = groupPos / perGroup;
+            //n * perGroup = groupPos
 
             stat = db.prepareStatement("SELECT * FROM Scrambles WHERE competitionId = ? AND eventId = ? AND roundId = ? AND groupId = ?");
             stat.setString(1, result.getCompetitionId());
@@ -76,7 +80,9 @@ public class Scramble {
             List<Scramble> scrambleList = new ArrayList<>();
 
             while (res.next()) {
-                scrambleList.add(Scramble.fromID(res.getInt("scrambleId")));
+                if (!res.getBoolean("isExtra")) {
+                    scrambleList.add(Scramble.fromID(res.getInt("scrambleId")));
+                }
             }
 
             return scrambleList.toArray(new Scramble[scrambleList.size()]);
@@ -84,6 +90,13 @@ public class Scramble {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static Scramble filterForSingle(Scramble[] scrambles, Result result) {
+        if (scrambles.length != ArrayUtils.trim(ArrayUtils.autobox(result.getValues()), 0).length) return null;
+
+        int solveIndex = ArrayUtils.index(ArrayUtils.autobox(result.getValues()), result.getBest());
+        return scrambles[solveIndex];
     }
 
     //Database values

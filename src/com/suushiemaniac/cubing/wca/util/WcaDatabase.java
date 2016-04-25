@@ -3,22 +3,33 @@ package com.suushiemaniac.cubing.wca.util;
 import java.sql.*;
 
 public class WcaDatabase {
-    public static WcaDatabase singleton;
+    private static WcaDatabase singleton;
+    private static String defaultJdbc = "jdbc:mysql://localhost:3306/wca-export?useSSL=false&user=wca";
 
     public static WcaDatabase inst() {
-        if (singleton == null) singleton = new WcaDatabase();
+        if (singleton == null || !singleton.getJdbcString().equals(defaultJdbc)) singleton = new WcaDatabase(defaultJdbc);
         return singleton;
     }
 
-    private Connection conn;
+    public static void setDefaultJdbc(String defaultJdbc) {
+        WcaDatabase.defaultJdbc = defaultJdbc;
+    }
 
-    private WcaDatabase() {
-        //TODO move to separate config
+    private Connection conn;
+    private String jdbcString;
+
+    private WcaDatabase(String jdbcString) {
+        this.jdbcString = jdbcString;
+
         try {
-            this.conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/wca-export?useSSL=false&user=root&password=localsql");
+            this.conn = DriverManager.getConnection(jdbcString);
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getJdbcString() {
+        return jdbcString;
     }
 
     public PreparedStatement prepareStatement(String sql) {

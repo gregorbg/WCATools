@@ -130,11 +130,9 @@ public class Result {
     public static Result[] singlePbsForPersonForEvent(Person person, Event event) {
         try {
             WcaDatabase db = WcaDatabase.inst();
-            PreparedStatement stat = db.prepareStatement("SELECT * FROM Results WHERE personId = ? AND eventId = ? AND best = (SELECT min(best) FROM Results WHERE personId = ? AND eventId = ? AND best > 0)");
+            PreparedStatement stat = db.prepareStatement("SELECT * FROM Results WHERE personId = ? AND eventId = ? AND best > 0 ORDER BY best ASC LIMIT 1");
             stat.setString(1, person.getId());
             stat.setString(2, event.getId());
-            stat.setString(3, person.getId());
-            stat.setString(4, event.getId());
 
             return forQuery(stat);
         } catch (SQLException e) {
@@ -156,11 +154,9 @@ public class Result {
     public static Result[] averagePbsForPersonForEvent(Person person, Event event) {
         try {
             WcaDatabase db = WcaDatabase.inst();
-            PreparedStatement stat = db.prepareStatement("SELECT * FROM Results WHERE personId = ? AND eventId = ? AND average = (SELECT min(average) FROM Results WHERE personId = ? AND eventId = ? AND average > 0)");
+            PreparedStatement stat = db.prepareStatement("SELECT * FROM Results WHERE personId = ? AND eventId = ? AND average > 0 ORDER BY average ASC LIMIT 1");
             stat.setString(1, person.getId());
             stat.setString(2, event.getId());
-            stat.setString(3, person.getId());
-            stat.setString(4, event.getId());
 
             return forQuery(stat);
         } catch (SQLException e) {
