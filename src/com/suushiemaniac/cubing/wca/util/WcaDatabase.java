@@ -4,7 +4,7 @@ import java.sql.*;
 
 public class WcaDatabase {
     private static WcaDatabase singleton;
-    private static String defaultJdbc = "jdbc:mysql://localhost:3306/wca-export?useSSL=false&user=wca";
+    private static String defaultJdbc = "jdbc:mysql://localhost:3306/wca-export?user=wca&useSSL=false";
 
     public static WcaDatabase inst() {
         if (singleton == null || !singleton.getJdbcString().equals(defaultJdbc)) singleton = new WcaDatabase(defaultJdbc);

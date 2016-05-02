@@ -308,7 +308,7 @@ public class Result {
 
     public Solve getBestSolve() {
         if (bestSolve == null) {
-            bestSolve = new Solve(best);
+            bestSolve = new Solve(best, this.getEvent());
         }
 
         return bestSolve;
@@ -320,7 +320,7 @@ public class Result {
 
     public Solve getAverageSolve() {
         if (averageSolve == null) {
-            averageSolve = new Solve(average);
+            averageSolve = new Solve(average, this.getEvent());
         }
 
         return averageSolve;
@@ -335,7 +335,7 @@ public class Result {
             solves = new Solve[values.length];
 
             for (int i = 0; i < values.length; i++) {
-                solves[i] = new Solve(values[i]);
+                solves[i] = new Solve(values[i], this.getEvent());
             }
         }
 
