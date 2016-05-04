@@ -119,4 +119,8 @@ public class Event {
     public void setRank(int rank) {
         this.rank = rank;
     }
+
+    public String toString() {
+        return this.cellName;
+    }
 }
