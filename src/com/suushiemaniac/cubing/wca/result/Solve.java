@@ -4,7 +4,6 @@ import com.suushiemaniac.cubing.wca.comp.Event;
 import com.suushiemaniac.cubing.wca.util.ArrayUtils;
 import com.suushiemaniac.cubing.wca.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -26,10 +25,15 @@ public class Solve {
             formatValues[i] = (int) (elapsed % convConst[i]);
         }
 
-        int[] trimmed = ArrayUtils.autobox(ArrayUtils.trimBack(ArrayUtils.autobox(formatValues), 0));
+        int[] trimmed = ArrayUtils.autobox(ArrayUtils.reverse(ArrayUtils.trimBack(ArrayUtils.autobox(formatValues), 0)));
+        String[] filled = new String[trimmed.length];
 
-        //TODO korrekte Trennzeichen, alles außer erster Stelle mit 0 auffüllen
-        return String.join(".", ArrayUtils.toStringArray(ArrayUtils.reverse(ArrayUtils.autobox(trimmed))));
+        for (int i = 0; i < (trimmed.length & filled.length); i++)
+            filled[i] = i > 0 ? StringUtils.fillLeading("" + trimmed[i], '0', 2) : "" + trimmed[i];
+
+        List<String> filledList = Arrays.asList(filled);
+
+        return String.join(".", String.join(":", filledList.subList(0, filledList.size() - 1)), filledList.get(filledList.size() - 1));
     }
 
     private long elapsed;
@@ -80,7 +84,7 @@ public class Solve {
                 return formatTime(this.elapsed);
 
             case "number":
-                return String.valueOf(this.isAverage ? ((float) this.elapsed) / 100 : this.elapsed);
+                return this.isAverage ? String.valueOf(((float) this.elapsed) / 100) : String.valueOf(this.elapsed);
 
             case "multi":
 

@@ -320,7 +320,7 @@ public class Result {
 
     public Solve getAverageSolve() {
         if (averageSolve == null) {
-            averageSolve = new Solve(average, this.getEvent());
+            averageSolve = new Solve(average, this.getEvent(), true);
         }
 
         return averageSolve;
