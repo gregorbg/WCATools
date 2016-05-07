@@ -4,6 +4,7 @@ import com.suushiemaniac.cubing.wca.comp.Event;
 import com.suushiemaniac.cubing.wca.util.ArrayUtils;
 import com.suushiemaniac.cubing.wca.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -31,7 +32,8 @@ public class Solve {
         for (int i = 0; i < (trimmed.length & filled.length); i++)
             filled[i] = i > 0 ? StringUtils.fillLeading("" + trimmed[i], '0', 2) : "" + trimmed[i];
 
-        List<String> filledList = Arrays.asList(filled);
+        List<String> filledList = new ArrayList<>(Arrays.asList(filled));
+        if (filledList.size() <= 1) filledList.add(0, "0");
 
         return String.join(".", String.join(":", filledList.subList(0, filledList.size() - 1)), filledList.get(filledList.size() - 1));
     }
@@ -49,6 +51,7 @@ public class Solve {
     public Solve(long elapsed, Event event, boolean isAverage) {
         this.elapsed = elapsed;
         this.event = event;
+        this.isAverage = isAverage;
     }
 
     public long getElapsed() {
