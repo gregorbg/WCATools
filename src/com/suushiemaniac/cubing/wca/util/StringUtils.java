@@ -1,8 +1,5 @@
 package com.suushiemaniac.cubing.wca.util;
 
-import java.util.Arrays;
-import java.util.List;
-
 public abstract class StringUtils {
     public static String fillLeading(String toFill, char fillChar, int finalLength) {
         String filled = toFill;

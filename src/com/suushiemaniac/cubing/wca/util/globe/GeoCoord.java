@@ -1,8 +1,5 @@
 package com.suushiemaniac.cubing.wca.util.globe;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 public class GeoCoord {
     private int latitude;
     private int longitude;

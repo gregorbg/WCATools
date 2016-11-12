@@ -21,10 +21,7 @@ public class Format {
 
             try {
                 while (res.next()) {
-                    formatList.add(new Format(
-                            res.getString("id"),
-                            res.getString("name")
-                    ));
+                    formatList.add(Format.fromPointedResult(res));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -46,17 +43,29 @@ public class Format {
         return null;
     }
 
+    public static Format fromPointedResult(ResultSet res) {
+		try {
+			return new Format(
+				res.getString("id"),
+				res.getString("name")
+			);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
     public static Format[] fromName(String name) {
         try {
             WcaDatabase db = WcaDatabase.inst();
-            PreparedStatement stat = db.prepareStatement("SELECT id FROM Formats WHERE name LIKE ?");
+            PreparedStatement stat = db.prepareStatement("SELECT * FROM Formats WHERE name LIKE ?");
             stat.setString(1, name);
 
             ResultSet res = db.query(stat);
             List<Format> formatList = new ArrayList<>();
 
             while (res.next()) {
-                formatList.add(Format.fromID(res.getString("id")));
+                formatList.add(Format.fromPointedResult(res));
             }
 
             return formatList.toArray(new Format[formatList.size()]);

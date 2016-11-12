@@ -35,7 +35,7 @@ public class Competition {
                     res.getString("venue"),
                     res.getString("venueAddress"),
                     res.getString("venueDetails"),
-                    res.getString("website"),
+                    res.getString("external_website"),
                     res.getString("cellName"),
                     res.getInt("year"),
                     res.getInt("month"),

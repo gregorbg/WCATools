@@ -21,21 +21,30 @@ public class Scramble {
 
             ResultSet res = db.query(stat);
 
-            return res.next() ? new Scramble(
-                    res.getInt("scrambleId"),
-                    res.getInt("scrambleNum"),
-                    res.getString("competitionId"),
-                    res.getString("eventId"),
-                    res.getString("roundId"),
-                    res.getString("groupId"),
-                    res.getString("scramble"),
-                    res.getBoolean("isExtra")
-            ) : null;
+            return res.next() ? Scramble.fromPointedResult(res) : null;
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
         }
     }
+
+    public static Scramble fromPointedResult(ResultSet res) {
+		try {
+			return new Scramble(
+					res.getInt("scrambleId"),
+					res.getInt("scrambleNum"),
+					res.getString("competitionId"),
+					res.getString("eventId"),
+					res.getString("roundId"),
+					res.getString("groupId"),
+					res.getString("scramble"),
+					res.getBoolean("isExtra")
+			);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
     public static Scramble[] forResult(Result result) {
         try {
@@ -81,8 +90,33 @@ public class Scramble {
 
             while (res.next()) {
                 if (!res.getBoolean("isExtra")) {
-                    scrambleList.add(Scramble.fromID(res.getInt("scrambleId")));
+                    scrambleList.add(Scramble.fromPointedResult(res));
                 }
+            }
+
+            return scrambleList.toArray(new Scramble[scrambleList.size()]);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Scramble[] allForEvent(Event event) {
+        try {
+            WcaDatabase db = WcaDatabase.inst();
+
+            PreparedStatement stat = db.prepareStatement("" +
+                    "SELECT scr.* FROM Scrambles AS scr " +
+					"INNER JOIN Competitions AS comp ON scr.competitionId = comp.id " +
+					"WHERE scr.eventId = ?");
+
+            stat.setString(1, event.getId());
+
+            ResultSet res = stat.executeQuery();
+            List<Scramble> scrambleList = new ArrayList<>();
+
+            while (res.next()) {
+                scrambleList.add(Scramble.fromPointedResult(res));
             }
 
             return scrambleList.toArray(new Scramble[scrambleList.size()]);

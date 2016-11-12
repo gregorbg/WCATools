@@ -19,14 +19,23 @@ public class Continent {
 
             ResultSet res = db.query(stat);
 
-            return res.next() ? new Continent(
-                    res.getString("id"),
-                    res.getString("name"),
-                    res.getString("recordName"),
-                    res.getInt("latitude"),
-                    res.getInt("longitude"),
-                    res.getInt("zoom")
-            ) : null;
+            return res.next() ? Continent.fromPointedResult(res) : null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Continent fromPointedResult(ResultSet res) {
+        try {
+            return new Continent(
+				res.getString("id"),
+				res.getString("name"),
+				res.getString("recordName"),
+				res.getInt("latitude"),
+				res.getInt("longitude"),
+				res.getInt("zoom")
+			);
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
@@ -36,14 +45,14 @@ public class Continent {
     public static Continent[] fromName(String name) {
         try {
             WcaDatabase db = WcaDatabase.inst();
-            PreparedStatement stat = db.prepareStatement("SELECT id FROM Continents WHERE name LIKE ?");
+            PreparedStatement stat = db.prepareStatement("SELECT * FROM Continents WHERE name LIKE ?");
             stat.setString(1, "%" + name + "%");
 
             ResultSet res = db.query(stat);
             List<Continent> continentList = new ArrayList<>();
 
             while (res.next()) {
-                continentList.add(Continent.fromID(res.getString("id")));
+                continentList.add(Continent.fromPointedResult(res));
             }
 
             return continentList.toArray(new Continent[continentList.size()]);

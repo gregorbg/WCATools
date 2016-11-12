@@ -25,33 +25,42 @@ public class Result {
             List<Result> resultList = new ArrayList<>();
 
             while (res.next()) {
-                int[] values = new int[5];
-
-                for (int i = 0; i < 5; i++) {
-                    values[i] = res.getInt("value" + (i + 1));
-                }
-
-                resultList.add(new Result(
-                        res.getString("competitionId"),
-                        res.getString("eventId"),
-                        res.getString("roundId"),
-                        res.getString("personName"),
-                        res.getString("personId"),
-                        res.getString("personCountryId"),
-                        res.getString("formatId"),
-                        res.getString("regionalSingleRecord"),
-                        res.getString("regionalAverageRecord"),
-                        res.getInt("pos"),
-                        res.getInt("best"),
-                        res.getInt("average"),
-                        values
-                ));
+                resultList.add(Result.fromPointedResult(res));
             }
 
             return resultList.toArray(new Result[resultList.size()]);
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public static Result fromPointedResult(ResultSet res) {
+        try {
+            return new Result(
+				res.getString("competitionId"),
+				res.getString("eventId"),
+				res.getString("roundId"),
+				res.getString("personName"),
+				res.getString("personId"),
+				res.getString("personCountryId"),
+				res.getString("formatId"),
+				res.getString("regionalSingleRecord"),
+				res.getString("regionalAverageRecord"),
+				res.getInt("pos"),
+				res.getInt("best"),
+				res.getInt("average"),
+				new int[]{
+					res.getInt("value1"),
+					res.getInt("value2"),
+					res.getInt("value3"),
+					res.getInt("value4"),
+					res.getInt("value5")
+				}
+			);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        	return null;
         }
     }
 

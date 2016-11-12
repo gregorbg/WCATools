@@ -1,5 +1,6 @@
 package com.suushiemaniac.cubing.wca.util.globe;
 
+import com.suushiemaniac.cubing.wca.result.Result;
 import com.suushiemaniac.cubing.wca.util.WcaDatabase;
 
 import java.sql.PreparedStatement;
@@ -17,15 +18,24 @@ public class Country {
 
             ResultSet res = db.query(stat);
 
-            return res.next() ? new Country(
-                    res.getString("id"),
-                    res.getString("name"),
-                    res.getString("continentId"),
-                    res.getString("iso2"),
-                    res.getInt("latitude"),
-                    res.getInt("longitude"),
-                    res.getInt("zoom")
-            ) : null;
+            return res.next() ? Country.fromPointedResult(res) : null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Country fromPointedResult(ResultSet res) {
+        try {
+            return new Country(
+				res.getString("id"),
+				res.getString("name"),
+				res.getString("continentId"),
+				res.getString("iso2"),
+				res.getInt("latitude"),
+				res.getInt("longitude"),
+				res.getInt("zoom")
+			);
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
@@ -35,14 +45,14 @@ public class Country {
     public static Country[] fromName(String name) {
         try {
             WcaDatabase db = WcaDatabase.inst();
-            PreparedStatement stat = db.prepareStatement("SELECT id FROM Countries WHERE name LIKE ?");
+            PreparedStatement stat = db.prepareStatement("SELECT * FROM Countries WHERE name LIKE ?");
             stat.setString(1, "%" + name + "%");
 
             ResultSet res = db.query(stat);
             List<Country> countryList = new ArrayList<>();
 
             while (res.next()) {
-                countryList.add(Country.fromID(res.getString("id")));
+                countryList.add(Country.fromPointedResult(res));
             }
 
             return countryList.toArray(new Country[countryList.size()]);
