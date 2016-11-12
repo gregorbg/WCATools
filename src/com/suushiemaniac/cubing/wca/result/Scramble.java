@@ -106,9 +106,8 @@ public class Scramble {
             WcaDatabase db = WcaDatabase.inst();
 
             PreparedStatement stat = db.prepareStatement("" +
-                    "SELECT scr.* FROM Scrambles AS scr " +
-					"INNER JOIN Competitions AS comp ON scr.competitionId = comp.id " +
-					"WHERE scr.eventId = ?");
+                    "SELECT * FROM Scrambles " +
+					"WHERE eventId = ?");
 
             stat.setString(1, event.getId());
 
@@ -120,6 +119,26 @@ public class Scramble {
             }
 
             return scrambleList.toArray(new Scramble[scrambleList.size()]);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Scramble randomForEvent(Event event) {
+        try {
+            WcaDatabase db = WcaDatabase.inst();
+
+            PreparedStatement stat = db.prepareStatement("" +
+                    "SELECT * FROM Scrambles " +
+                    "WHERE eventId = ? " +
+                    "ORDER BY RAND() " +
+                    "LIMIT 1");
+
+            stat.setString(1, event.getId());
+
+            ResultSet res = stat.executeQuery();
+            return res.next() ? Scramble.fromPointedResult(res) : null;
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
